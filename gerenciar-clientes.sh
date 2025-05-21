@@ -1,60 +1,96 @@
 #!/bin/bash
 
-EASYRSA_DIR="/etc/openvpn/easy-rsa"  # ajuste conforme seu ambiente
-cd "$EASYRSA_DIR" || { echo "Easy-RSA não encontrado em $EASYRSA_DIR"; exit 1; }
+EASYRSA_DIR="/etc/openvpn/easy-rsa"  # Ajuste conforme sua instalação
+cd "$EASYRSA_DIR" || { echo "❌ Easy-RSA não encontrado em $EASYRSA_DIR"; exit 1; }
 
 source ./vars 2>/dev/null
 
-CLIENT_PREFIX="LOJA"
-DAYS_VALID=3650  # 10 anos
+CLIENT_NAME=""
+OUTPUT_TYPE=""
 KEYS_DIR="$EASYRSA_DIR/pki"
+OUTPUT_DIR="/etc/openvpn/clientes"  # Onde os arquivos finais serão salvos
+mkdir -p "$OUTPUT_DIR"
 
-# Função para verificar se um usuário existe
-verificar_usuario() {
-    read -rp "Digite o nome do usuário (ex: LOJA001): " USERNAME
-    if [[ -f "$KEYS_DIR/issued/${USERNAME}.crt" ]]; then
-        echo "✅ O certificado do usuário '$USERNAME' já existe."
-    else
-        echo "❌ O certificado do usuário '$USERNAME' NÃO existe."
-    fi
+usage() {
+    echo "Uso: $0 -name NOME_DO_CLIENTE -type [ovpn|files]"
+    exit 1
 }
 
-# Função para criar o próximo usuário incremental (LOJA001, LOJA002, etc)
-criar_proximo_usuario() {
-    echo "🔍 Procurando próximo nome disponível..."
-    for i in $(seq -w 1 999); do
-        USERNAME="${CLIENT_PREFIX}${i}"
-        if [[ ! -f "$KEYS_DIR/issued/${USERNAME}.crt" ]]; then
-            echo "📦 Próximo usuário disponível: $USERNAME"
-            break
-        fi
-    done
+# Processa os parâmetros
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -name)
+            CLIENT_NAME="$2"
+            shift 2
+            ;;
+        -type)
+            OUTPUT_TYPE="$2"
+            shift 2
+            ;;
+        *)
+            echo "❌ Parâmetro inválido: $1"
+            usage
+            ;;
+    esac
+done
 
-    read -rp "Deseja criar certificado para '$USERNAME'? [s/N]: " CONFIRMA
-    if [[ ! "$CONFIRMA" =~ ^[sS]$ ]]; then
-        echo "❌ Cancelado."
-        exit 0
-    fi
+# Valida entrada
+[[ -z "$CLIENT_NAME" || -z "$OUTPUT_TYPE" ]] && usage
+[[ "$OUTPUT_TYPE" != "ovpn" && "$OUTPUT_TYPE" != "files" ]] && usage
 
-    echo "🔐 Criando certificado de 10 anos para $USERNAME..."
-    ./easyrsa build-client-full "$USERNAME" nopass
+# Verifica se o cliente já existe
+if [[ -f "$KEYS_DIR/issued/${CLIENT_NAME}.crt" ]]; then
+    echo "⚠️  O certificado para '$CLIENT_NAME' já existe. Abortando."
+    exit 1
+fi
 
-    if [[ $? -eq 0 ]]; then
-        echo "✅ Certificado criado com sucesso: $USERNAME"
-    else
-        echo "❌ Erro ao criar certificado."
-    fi
-}
+# Cria o certificado (10 anos)
+echo "🔐 Criando certificado de 10 anos para '$CLIENT_NAME'..."
+./easyrsa build-client-full "$CLIENT_NAME" nopass
 
-# Menu principal
-echo "=========== GERENCIADOR DE CLIENTES OPENVPN ==========="
-echo "1) Verificar se um usuário existe"
-echo "2) Criar próximo usuário incremental"
-echo "3) Sair"
-read -rp "Escolha uma opção: " OPCAO
+if [[ $? -ne 0 ]]; then
+    echo "❌ Falha ao criar o certificado."
+    exit 1
+fi
 
-case "$OPCAO" in
-    1) verificar_usuario ;;
-    2) criar_proximo_usuario ;;
-    *) echo "Saindo..." ;;
-esac
+# Geração de arquivos
+if [[ "$OUTPUT_TYPE" == "files" ]]; then
+    echo "📁 Gerando arquivos separados em: $OUTPUT_DIR/$CLIENT_NAME"
+    mkdir -p "$OUTPUT_DIR/$CLIENT_NAME"
+    cp "$KEYS_DIR/ca.crt" "$OUTPUT_DIR/$CLIENT_NAME/"
+    cp "$KEYS_DIR/issued/$CLIENT_NAME.crt" "$OUTPUT_DIR/$CLIENT_NAME/"
+    cp "$KEYS_DIR/private/$CLIENT_NAME.key" "$OUTPUT_DIR/$CLIENT_NAME/"
+    echo "✅ Arquivos copiados."
+elif [[ "$OUTPUT_TYPE" == "ovpn" ]]; then
+    echo "📦 Gerando arquivo .ovpn único..."
+
+    OVPN_TEMPLATE="$OUTPUT_DIR/$CLIENT_NAME.ovpn"
+
+    cat > "$OVPN_TEMPLATE" <<EOF
+client
+dev tun
+proto udp
+remote SEU_ENDERECO_OU_IP 1194
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+remote-cert-tls server
+cipher AES-256-CBC
+verb 3
+
+<ca>
+$(cat "$KEYS_DIR/ca.crt")
+</ca>
+
+<cert>
+$(openssl x509 -in "$KEYS_DIR/issued/$CLIENT_NAME.crt")
+</cert>
+
+<key>
+$(cat "$KEYS_DIR/private/$CLIENT_NAME.key")
+</key>
+EOF
+
+    echo "✅ Arquivo gerado: $OVPN_TEMPLATE"
+fi
