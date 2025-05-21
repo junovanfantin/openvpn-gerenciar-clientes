@@ -32,6 +32,7 @@
 
 Estrutura de saída:
     /etc/openvpn/clientes/LOJAXTZ/
+    
       ── LOJAXTZ.ovpn           (ou arquivos .crt/.key/.ca)
       ── README.txt             (contém a senha)
       ── LOJAXTZ.zip            ← ZIP final para envio ao cliente
