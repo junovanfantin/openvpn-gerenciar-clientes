@@ -1,49 +1,51 @@
 # openvpn-gerenciar-clientes
 
-✅ Recursos novos:
+✅ Novos Recursos:
+🔐 Criação automática de:
 
-    -name LOJAXTZ: você especifica o nome do cliente manualmente.
+    Certificado com 10 anos.
 
-    -type ovpn: gera um único arquivo .ovpn.
+    Arquivo .ovpn ou arquivos separados.
 
-    -type files: gera os arquivos separados (.crt, .key, .ca, etc.).
+    Usuário do sistema Linux (com senha aleatória ou definida).
+    
 
-    Verifica se o cliente já existe antes de criar.
+📦 Exportação:
 
-    Certificado válido por 10 anos (3650 dias).
+    Todos os arquivos são exportados para /etc/openvpn/clientes/NOME_CLIENTE.
 
-🛠️ Como usar
+    Arquivos podem ser compactados em .zip automaticamente.
+    
 
-    Salve o script como gerenciar-clientes.sh.
-
-    Dê permissão de execução:
-
-chmod +x gerenciar-clientes.sh
-
-    Execute com:
-
-./gerenciar-clientes.sh
-
-🧪 Exemplos de uso
-🔸 Criar certificado e gerar .ovpn:
-
+    🧪 Exemplo de uso
+🔹 Gerar .ovpn com senha aleatória:
 ./gerenciar-cliente.sh -name LOJAXTZ -type ovpn
 
-🔸 Criar certificado e exportar arquivos separados:
+🔹 Gerar .ovpn com senha definida:
+./gerenciar-cliente.sh -name LOJA123 -type ovpn -pass 123SenhaForte
 
-./gerenciar-cliente.sh -name LOJAXTZ -type files
+🔹 Gerar arquivos separados:
+./gerenciar-cliente.sh -name LOJA124 -type files
 
-📁 Saídas
 
-    Para -type ovpn:
-    → /etc/openvpn/clientes/LOJAXTZ.ovpn
+📂 Saída final
 
-    Para -type files:
-    → /etc/openvpn/clientes/LOJAXTZ/{ca.crt, LOJAXTZ.crt, LOJAXTZ.key}
+Estrutura de saída:
+/etc/openvpn/clientes/LOJAXTZ/
+  ├── LOJAXTZ.ovpn           (ou arquivos .crt/.key/.ca)
+  ├── README.txt             (contém a senha)
+  └── LOJAXTZ.zip            ← ZIP final para envio ao cliente
 
-🔧 Ajustes que você deve fazer:
+❗ Dica: Configure corretamente o servidor OpenVPN
 
-    Substitua SEU_ENDERECO_OU_IP no template .ovpn pelo IP ou domínio público do seu servidor.
+No /etc/openvpn/server.conf, garanta que tenha:
+plugin /usr/lib/openvpn/plugins/openvpn-plugin-auth-pam.so login
+client-cert-not-required
+username-as-common-name
 
-    Certifique-se de que o OpenVPN está usando a mesma CA e configuração.
+E reinicie o serviço:
+sudo systemctl restart openvpn@server
+
+
+
 
