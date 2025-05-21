@@ -17,15 +17,16 @@
     Arquivos podem ser compactados em .zip automaticamente.
     
 
-    🧪 Exemplo de uso
-🔹 Gerar .ovpn com senha aleatória:
-./gerenciar-cliente.sh -name LOJAXTZ -type ovpn
+🧪 Exemplo de uso
 
-🔹 Gerar .ovpn com senha definida:
-./gerenciar-cliente.sh -name LOJA123 -type ovpn -pass 123SenhaForte
-
-🔹 Gerar arquivos separados:
-./gerenciar-cliente.sh -name LOJA124 -type files
+    🔹 Gerar .ovpn com senha aleatória:
+    ./gerenciar-cliente.sh -name LOJAXTZ -type ovpn
+    
+    🔹 Gerar .ovpn com senha definida:
+    ./gerenciar-cliente.sh -name LOJA123 -type ovpn -pass 123SenhaForte
+    
+    🔹 Gerar arquivos separados:
+    ./gerenciar-cliente.sh -name LOJA124 -type files
 
 
     🧪 Exemplos de uso
