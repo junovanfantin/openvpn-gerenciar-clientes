@@ -29,9 +29,10 @@
     ./gerenciar-cliente.sh -name LOJA124 -type files
 
 
-    🧪 Exemplos de uso
+🧪 Exemplos de uso
+
 🔸 Criar certificado e gerar .ovpn:
-./gerenciar-cliente.sh -name LOJAXTZ -type ovpn
+    ./gerenciar-cliente.sh -name LOJAXTZ -type ovpn
 
 🔸 Criar certificado e exportar arquivos separados:
 ./gerenciar-cliente.sh -name LOJAXTZ -type files
