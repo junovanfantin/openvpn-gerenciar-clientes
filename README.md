@@ -1,5 +1,16 @@
 # openvpn-gerenciar-clientes
 
+✅ Recursos novos:
+
+    -name LOJAXTZ: você especifica o nome do cliente manualmente.
+
+    -type ovpn: gera um único arquivo .ovpn.
+
+    -type files: gera os arquivos separados (.crt, .key, .ca, etc.).
+
+    Verifica se o cliente já existe antes de criar.
+
+    Certificado válido por 10 anos (3650 dias).
 
 🛠️ Como usar
 
@@ -13,11 +24,26 @@ chmod +x gerenciar-clientes.sh
 
 ./gerenciar-clientes.sh
 
-📁 Saídas geradas
+🧪 Exemplos de uso
+🔸 Criar certificado e gerar .ovpn:
 
-O certificado do cliente será criado dentro do diretório:
+./gerenciar-cliente.sh -name LOJAXTZ -type ovpn
 
-/etc/openvpn/easy-rsa/pki/issued/LOJAxxx.crt
-/etc/openvpn/easy-rsa/pki/private/LOJAxxx.key
+🔸 Criar certificado e exportar arquivos separados:
 
-Você pode depois montar o .ovpn do cliente com esses arquivos.
+./gerenciar-cliente.sh -name LOJAXTZ -type files
+
+📁 Saídas
+
+    Para -type ovpn:
+    → /etc/openvpn/clientes/LOJAXTZ.ovpn
+
+    Para -type files:
+    → /etc/openvpn/clientes/LOJAXTZ/{ca.crt, LOJAXTZ.crt, LOJAXTZ.key}
+
+🔧 Ajustes que você deve fazer:
+
+    Substitua SEU_ENDERECO_OU_IP no template .ovpn pelo IP ou domínio público do seu servidor.
+
+    Certifique-se de que o OpenVPN está usando a mesma CA e configuração.
+
